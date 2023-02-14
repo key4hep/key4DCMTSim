@@ -39,7 +39,7 @@ StatusCode DCMTSimAlg::initialize() {
         m_input_dataHandles[colName] =  new DataHandle<edm4hep::SimTrackerHitCollection>(colName, Gaudi::DataHandle::Reader, this);
     }
     else if ( colType == "TPCHit" ) {
-        m_input_dataHandles[colName] =  new DataHandle<edm4hep::TPCHitCollection>(colName, Gaudi::DataHandle::Reader, this);
+        m_input_dataHandles[colName] =  new DataHandle<edm4hep::RawTimeSeriesCollection>(colName, Gaudi::DataHandle::Reader, this);
     }
     else{
         debug() << "Unknown collection type "<< colType << endmsg;
@@ -52,7 +52,7 @@ StatusCode DCMTSimAlg::initialize() {
     std::string colType = m_type_outputs.value().at(i);
     debug() << "adding output key " << colName<<", with type "<< colType << endmsg;
     if ( colType == "TPCHit" ) {
-        m_output_dataHandles[colName] =  new DataHandle<edm4hep::TPCHitCollection>(colName, Gaudi::DataHandle::Writer, this);
+        m_output_dataHandles[colName] =  new DataHandle<edm4hep::RawTimeSeriesCollection>(colName, Gaudi::DataHandle::Writer, this);
     }
     else{
         info() << "Unknown collection type "<< colType << endmsg;
@@ -77,13 +77,13 @@ StatusCode DCMTSimAlg::execute() {
         fatal() << "Unable to dcast inputHandles object" << endmsg;
         return StatusCode::FAILURE;
       }
-      auto output_col = new edm4hep::TPCHitCollection();
+      auto output_col = new edm4hep::RawTimeSeriesCollection();
       info() <<" input collection size="<< in_obj->size()<< endmsg;
       int ele_size = in_obj->size();
       info() << "simulating single WF, evt=" << evt<<",range from "<<m_range.value().at(0)<<" to "<<m_range.value().at(1) << endmsg;
       for(unsigned int i = int(m_range.value().at(0)*ele_size); i<int(m_range.value().at(1)*ele_size); i++){
           edm4hep::SimTrackerHit SimHit = in_obj->at(i);
-          edm4hep::TPCHit tpc_hit = output_col->create();
+          edm4hep::RawTimeSeries tpc_hit = output_col->create();
           tpc_hit.setCellID(SimHit.getCellID());
           float c_time = -1; 
           float c_peak = -1;
@@ -118,7 +118,7 @@ StatusCode DCMTSimAlg::execute() {
       while(iter != m_output_dataHandles.end()){
           std::string out_name = iter->first;
           if (out_name.find("SingleWF") != out_name.npos) {
-              auto handle = dynamic_cast<DataHandle<edm4hep::TPCHitCollection>*>( iter->second );
+              auto handle = dynamic_cast<DataHandle<edm4hep::RawTimeSeriesCollection>*>( iter->second );
               handle->put(output_col);
               out_saved = true;
               break;
@@ -132,22 +132,22 @@ StatusCode DCMTSimAlg::execute() {
       info() << "saved outputs for evt="<<evt<< endmsg;
   }
   else if(m_type.value()==2){
-      auto output_col = new edm4hep::TPCHitCollection();
-      std::map<unsigned long long, edm4hep::TPCHit> map_id_hit;
+      auto output_col = new edm4hep::RawTimeSeriesCollection();
+      std::map<unsigned long long, edm4hep::RawTimeSeries> map_id_hit;
       for(std::map<std::string, DataObjectHandleBase*>::iterator iter=m_input_dataHandles.begin(); iter != m_input_dataHandles.end(); iter++){
         std::string in_name = iter->first;
         if (in_name.find("SingleWF") == in_name.npos) continue;
-        const edm4hep::TPCHitCollection* in_col = nullptr;
-        in_col = dynamic_cast<DataHandle<edm4hep::TPCHitCollection>*>(iter->second)->get();
+        const edm4hep::RawTimeSeriesCollection* in_col = nullptr;
+        in_col = dynamic_cast<DataHandle<edm4hep::RawTimeSeriesCollection>*>(iter->second)->get();
         if ( !in_col ) {
           fatal() << "Unable to dcast inputHandles object" << endmsg;
           return StatusCode::FAILURE;
         }
         info() << "Got data with size="<< in_col->size()<< endmsg;
         for(unsigned int i=0; i<in_col->size(); i++){
-            edm4hep::TPCHit in_tpc_hit = in_col->at(i);
+            edm4hep::RawTimeSeries in_tpc_hit = in_col->at(i);
             unsigned long long tmp_id = in_tpc_hit.getCellID();
-            edm4hep::TPCHit out_tpc_hit (tmp_id,int(0),0.0, 0.0);
+            edm4hep::RawTimeSeries out_tpc_hit (tmp_id,int(0),0.0, 0.0);
             if(map_id_hit.find(tmp_id) == map_id_hit.end()){
                 map_id_hit[tmp_id] = in_tpc_hit;
             }
@@ -159,8 +159,8 @@ StatusCode DCMTSimAlg::execute() {
             }
         }
       }
-      for(std::map<unsigned long long, edm4hep::TPCHit>::iterator iter=map_id_hit.begin(); iter !=map_id_hit.end(); iter++){
-          edm4hep::TPCHit tpc_hit_save = output_col->create();
+      for(std::map<unsigned long long, edm4hep::RawTimeSeries>::iterator iter=map_id_hit.begin(); iter !=map_id_hit.end(); iter++){
+          edm4hep::RawTimeSeries tpc_hit_save = output_col->create();
           tpc_hit_save = iter->second;    
       }
       std::map<std::string, DataObjectHandleBase*>::iterator iter;
@@ -169,7 +169,7 @@ StatusCode DCMTSimAlg::execute() {
       while(iter != m_output_dataHandles.end()){
           std::string out_name = iter->first;
           if (out_name.find("MergedWF") != out_name.npos) {
-              auto handle = dynamic_cast<DataHandle<edm4hep::TPCHitCollection>*>( iter->second );
+              auto handle = dynamic_cast<DataHandle<edm4hep::RawTimeSeriesCollection>*>( iter->second );
               handle->put(output_col);
               out_saved = true;
               break;
