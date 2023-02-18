@@ -153,7 +153,7 @@ StatusCode DCMTSimAlg::execute() {
             }
             else{
                 for(unsigned int j=0;j<map_id_hit[tmp_id].rawDataWords_size();j++){
-                    out_tpc_hit.addToAdcCounts( map_id_hit[tmp_id].getRawDataWords(j) + in_tpc_hit.getRawDataWords(j) );
+                    out_tpc_hit.addToAdcCounts( map_id_hit[tmp_id].getAdcCounts(j) + in_tpc_hit.getAdcCounts(j) );
                     map_id_hit[tmp_id] = out_tpc_hit;
                 }
             }
