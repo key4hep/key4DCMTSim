@@ -108,7 +108,7 @@ StatusCode DCMTSimAlg::execute() {
           transform(sp_wf, m_sp_peak_value.value().at(0), m_sp_peak_value.value().at(1), c_time, c_peak, ttmp_current_value, ttmp_current_time);
           for(unsigned int j=0; j<ttmp_current_value.size();j++){
               int scaled_value = int(1e6*ttmp_current_value.at(j));
-              tpc_hit.addToRawDataWords(scaled_value);
+              tpc_hit.addToAdcCounts(scaled_value);
           }
       }
       info() << "start save outputs, evt="<<evt<<",size="<<output_col->size() << endmsg;
@@ -153,7 +153,7 @@ StatusCode DCMTSimAlg::execute() {
             }
             else{
                 for(unsigned int j=0;j<map_id_hit[tmp_id].rawDataWords_size();j++){
-                    out_tpc_hit.addToRawDataWords( map_id_hit[tmp_id].getRawDataWords(j) + in_tpc_hit.getRawDataWords(j) );
+                    out_tpc_hit.addToAdcCounts( map_id_hit[tmp_id].getRawDataWords(j) + in_tpc_hit.getRawDataWords(j) );
                     map_id_hit[tmp_id] = out_tpc_hit;
                 }
             }
